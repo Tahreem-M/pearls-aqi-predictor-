@@ -1,0 +1,3 @@
+CITY_NAME = "Karachi"
+LAT = 24.8607
+LON = 67.0011
