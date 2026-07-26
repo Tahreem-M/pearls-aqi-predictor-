@@ -1,2 +1,0 @@
-timestamp,city,hour,day,month,day_of_week,pm2_5,pm10,co,no2,so2,o3,temp,humidity,pressure,wind_speed,aqi,aqi_category,aqi_change_rate
-2026-07-26T16:30:37.319812+00:00,Karachi,16,26,7,6,18.9,84.73,66.85,0.11,0.39,43.83,28.2,82,1002,6.31,66,Moderate,0.0
