@@ -45,7 +45,7 @@ def build_feature_row(pollution_data, weather_data, city_name, last_aqi=None):
     components = pollution_data["list"][0]["components"]
 
     aqi = compute_aqi(components["pm2_5"], components["pm10"])
-    aqi_change_rate = (aqi - last_aqi) if last_aqi is not None else 0.0
+    aqi_change_rate = float(aqi - last_aqi) if last_aqi is not None else 0.0
 
     return {
         "timestamp": now.isoformat(),
