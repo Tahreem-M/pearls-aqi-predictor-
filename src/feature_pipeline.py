@@ -1,9 +1,12 @@
 import os
 import csv
 from datetime import datetime, timezone
+
 import requests
+from dotenv import load_dotenv
 
 from src.config import LAT, LON, CITY_NAME
+from src.hopsworks_client import insert_feature_row
 from src.utils import compute_aqi, aqi_category
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), "..", "data")
@@ -59,8 +62,8 @@ def build_feature_row(pollution_data, weather_data, city_name, last_aqi=None):
         "o3": components["o3"],
         "temp": weather_data["main"]["temp"],
         "humidity": weather_data["main"]["humidity"],
-        "pressure": weather_data["main"]["pressure"],
-        "wind_speed": weather_data["wind"]["speed"],
+        "pressure": float(weather_data["main"]["pressure"]),
+        "wind_speed": float(weather_data["wind"]["speed"]),
         "aqi": aqi,
         "aqi_category": aqi_category(aqi),
         "aqi_change_rate": aqi_change_rate,
@@ -77,7 +80,14 @@ def save_row_locally(row):
         writer.writerow(row)
 
 
+def push_to_hopsworks(row):
+    """Push one feature row to the aqi_features Feature Group in Hopsworks."""
+    insert_feature_row(row)
+
+
 def run():
+    load_dotenv()
+
     api_key = os.environ.get("OPENWEATHER_API_KEY")
     if not api_key:
         print("ERROR: set OPENWEATHER_API_KEY first.")
@@ -86,11 +96,14 @@ def run():
     last_aqi = get_last_aqi()
     pollution_data, weather_data = fetch_raw_data(LAT, LON, api_key)
     row = build_feature_row(pollution_data, weather_data, CITY_NAME, last_aqi)
+
     save_row_locally(row)
+    push_to_hopsworks(row)
 
     print(f"[{row['timestamp']}] {CITY_NAME} AQI: {row['aqi']} ({row['aqi_category']}) "
           f"| change: {row['aqi_change_rate']:+.1f}")
-    print(f"Saved to {FEATURES_CSV}")
+    print(f"Saved locally to {FEATURES_CSV}")
+    print("Pushed to Hopsworks feature group 'aqi_features'")
 
 
 if __name__ == "__main__":
