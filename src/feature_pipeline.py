@@ -6,7 +6,7 @@ import requests
 from dotenv import load_dotenv
 
 from src.config import LAT, LON, CITY_NAME
-from src.hopsworks_client import insert_feature_row
+from src.hopsworks_client import insert_feature_row, connect, FEATURE_GROUP_NAME, FEATURE_GROUP_VERSION
 from src.utils import compute_aqi, aqi_category
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), "..", "data")
@@ -31,13 +31,33 @@ def fetch_raw_data(lat, lon, api_key):
 
 
 def get_last_aqi():
-    if not os.path.exists(FEATURES_CSV):
+    """
+    Get the most recent AQI value, for computing aqi_change_rate.
+
+    Tries the local CSV first (fast, works fine when running on your own
+    machine). Falls back to querying Hopsworks directly when no local
+    file exists — this matters for GitHub Actions, where every run starts
+    on a fresh machine with no local history, so the CSV fallback alone
+    would silently make aqi_change_rate always 0.0 in automated runs.
+    """
+    if os.path.exists(FEATURES_CSV):
+        with open(FEATURES_CSV, "r") as f:
+            rows = list(csv.DictReader(f))
+        if rows:
+            return float(rows[-1]["aqi"])
+
+    try:
+        project = connect()
+        fs = project.get_feature_store()
+        fg = fs.get_feature_group(name=FEATURE_GROUP_NAME, version=FEATURE_GROUP_VERSION)
+        df = fg.read()
+        if len(df) == 0:
+            return None
+        df = df.sort_values("timestamp")
+        return float(df.iloc[-1]["aqi"])
+    except Exception as e:
+        print(f"Could not fetch last AQI from Hopsworks (first run?): {e}")
         return None
-    with open(FEATURES_CSV, "r") as f:
-        rows = list(csv.DictReader(f))
-    if not rows:
-        return None
-    return float(rows[-1]["aqi"])
 
 
 def build_feature_row(pollution_data, weather_data, city_name, last_aqi=None):
