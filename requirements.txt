@@ -4,3 +4,4 @@ hopsworks[python]
 python-dotenv
 scikit-learn
 joblib
+streamlit
