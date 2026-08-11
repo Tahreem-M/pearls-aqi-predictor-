@@ -20,6 +20,19 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
+# On Streamlit Community Cloud, secrets are set in the app's Settings -> Secrets
+# (not via a .env file, which only exists locally). Copy them into os.environ so
+# the existing src/ modules (which read os.environ via python-dotenv) keep
+# working unchanged, whether running locally or deployed.
+# Locally, no secrets.toml file exists at all, so st.secrets itself raises an
+# error just from being accessed — wrap in try/except to skip cleanly.
+try:
+    for key in ("OPENWEATHER_API_KEY", "HOPSWORKS_API_KEY", "HOPSWORKS_PROJECT"):
+        if key in st.secrets:
+            os.environ[key] = st.secrets[key]
+except Exception:
+    pass  # no secrets.toml — normal when running locally with a .env file instead
+
 from src.hopsworks_client import connect, FEATURE_GROUP_NAME, FEATURE_GROUP_VERSION
 from src.inference_pipeline import run as get_forecast
 from src.utils import aqi_category
