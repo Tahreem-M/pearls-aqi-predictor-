@@ -78,6 +78,12 @@ def load_recent_history(hours=168):
     return df.tail(hours)
 
 
+@st.cache_data(ttl=300)
+def load_shap_explanation():
+    from src.shap_explain import explain_latest_prediction
+    return explain_latest_prediction()
+
+
 def make_gauge(value, title):
     color = aqi_color(value)
     return go.Figure(go.Indicator(
@@ -171,6 +177,31 @@ if history is not None and len(history) > 0:
     for col, (name, value, unit) in zip(cols, pollutants):
         with col:
             st.metric(name, f"{value:.1f}" if value is not None else "—", help=unit)
+
+st.divider()
+
+# --- SHAP explainability: why did the model predict this? ---
+st.subheader("🔍 Why this forecast?")
+with st.spinner("Computing feature importance (SHAP)..."):
+    try:
+        contributions, _ = load_shap_explanation()
+        contributions = contributions.sort_values("shap_value")
+
+        fig_shap = go.Figure(go.Bar(
+            x=contributions["shap_value"],
+            y=contributions["feature"],
+            orientation="h",
+            marker_color=["#ef4444" if v > 0 else "#22c55e" for v in contributions["shap_value"]],
+        ))
+        fig_shap.update_layout(
+            height=420, margin=dict(l=10, r=10, t=10, b=10),
+            paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+            font={"color": "#e5e7eb"},
+            xaxis_title="Impact on predicted AQI (red = increases, green = decreases)",
+        )
+        st.plotly_chart(fig_shap, use_container_width=True)
+    except Exception as e:
+        st.warning(f"Couldn't compute SHAP explanation: {e}")
 
 st.divider()
 if st.button("🔄 Refresh now"):
