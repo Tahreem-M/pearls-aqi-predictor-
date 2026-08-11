@@ -1,9 +1,9 @@
 requests
 pandas
-hopsworks[python]
+hopsworks
 python-dotenv
 scikit-learn
 joblib
 streamlit
+plotly
 shap
-matplotlib
