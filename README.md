@@ -128,18 +128,7 @@ Both pipelines run automatically via GitHub Actions, using repository secrets to
 An interactive Streamlit dashboard, deployed publicly, presents the live forecast with gauge charts, a hazard alert banner, a 7-day trend chart with shaded EPA category bands, and a live SHAP explanation chart.
 
 **🔗 Live: [eixzyufmehiobse65uavs6.streamlit.app](https://eixzyufmehiobse65uavs6.streamlit.app/)**
-
-**Current AQI and 3-day forecast gauges, with hazard status banner:**
-
-![AQI gauges and hazard banner](docs/screenshots/dashboard_gauges.png)
-
-**7-day AQI trend with shaded EPA category bands:**
-
-![7-day AQI trend](docs/screenshots/dashboard_trend.png)
-
-**Live pollutant breakdown for the latest reading:**
-
-![Pollutant breakdown](docs/screenshots/dashboard_pollutants.png)
+**Video Demostration Link:[https://youtu.be/vdfNfHeoGqs]**
 
 ## 9. Challenges and Solutions
 
