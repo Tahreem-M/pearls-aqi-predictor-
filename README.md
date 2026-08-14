@@ -219,5 +219,5 @@ aqi-predictor/
 
 ## Author
 
-**Tahreem Malik ** — BSCS, Sukkur IBA University
+**Tahreem Malik** — BSCS, Sukkur IBA University
 Data Science Intern, 10Pearls
