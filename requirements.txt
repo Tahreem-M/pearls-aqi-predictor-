@@ -1,6 +1,7 @@
 requests
 pandas
 hopsworks
+confluent-kafka
 python-dotenv
 scikit-learn
 joblib
