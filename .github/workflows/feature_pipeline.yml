@@ -2,8 +2,8 @@ name: Feature Pipeline
 
 on:
   schedule:
-    - cron: '0 * * * *'  # every hour, on the hour
-  workflow_dispatch: {}   # lets you also trigger it manually from GitHub's UI
+    - cron: '0 */4 * * *'  # every 4 hours instead of hourly, to conserve Hopsworks free-tier compute
+  workflow_dispatch: {}
 
 jobs:
   run-feature-pipeline:

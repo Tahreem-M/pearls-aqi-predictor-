@@ -76,12 +76,12 @@ st.markdown(
 )
 
 
-@st.cache_data(ttl=300)
+@st.cache_data(ttl=1800)
 def load_forecast():
     return get_forecast()
 
 
-@st.cache_data(ttl=300)
+@st.cache_data(ttl=1800)
 def load_recent_history(hours=168):
     project = connect()
     fs = project.get_feature_store()
@@ -91,7 +91,7 @@ def load_recent_history(hours=168):
     return df.tail(hours)
 
 
-@st.cache_data(ttl=300)
+@st.cache_data(ttl=1800)
 def load_shap_explanation():
     from src.shap_explain import explain_latest_prediction
     return explain_latest_prediction()
