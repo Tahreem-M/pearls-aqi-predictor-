@@ -9,8 +9,9 @@ Also reused by the dashboard for a live "why this forecast" chart.
 import pandas as pd
 import shap
 
-from src.inference_pipeline import FEATURE_COLUMNS, load_latest_features, download_latest_model
+from src.inference_pipeline import load_recent_features, download_latest_model
 from src.training_pipeline import load_training_data, build_target
+from src.utils import add_engineered_features, FEATURE_COLUMNS
 
 
 def explain_latest_prediction(background_sample_size=100):
@@ -24,10 +25,12 @@ def explain_latest_prediction(background_sample_size=100):
     """
     model, model_version = download_latest_model()
 
-    latest_row = load_latest_features()
+    latest_row = load_recent_features()
     X_latest = latest_row[FEATURE_COLUMNS]
 
     df = load_training_data()
+    df = add_engineered_features(df)
+    df = df.dropna(subset=FEATURE_COLUMNS)
     df = build_target(df)
     background = df[FEATURE_COLUMNS].sample(
         min(background_sample_size, len(df)), random_state=42
@@ -55,7 +58,7 @@ def run():
     print("(positive = pushed prediction UP, negative = pushed prediction DOWN)\n")
     for _, row in contributions.iterrows():
         direction = "+" if row["shap_value"] >= 0 else ""
-        print(f"  {row['feature']:<18} {direction}{row['shap_value']:.2f}")
+        print(f"  {row['feature']:<24} {direction}{row['shap_value']:.2f}")
 
 
 if __name__ == "__main__":

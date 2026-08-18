@@ -1,7 +1,7 @@
 """
 Inference pipeline — loads the latest trained model from the Hopsworks
-Model Registry and the most recent feature row, and predicts AQI 3 days
-(72 hours) from now.
+Model Registry, pulls enough recent feature history to compute rolling
+features correctly, and predicts AQI 3 days (72 hours) from now.
 
 Run: python -m src.inference_pipeline
 """
@@ -11,29 +11,33 @@ import joblib
 import pandas as pd
 from dotenv import load_dotenv
 
-from src.hopsworks_client import connect
-from src.utils import aqi_category
+from src.hopsworks_client import connect, FEATURE_GROUP_NAME, FEATURE_GROUP_VERSION
+from src.utils import add_engineered_features, aqi_category, FEATURE_COLUMNS
 
 load_dotenv()
 
-FEATURE_GROUP_VERSION = 5  # keep in sync with hopsworks_client.py and training_pipeline.py
-
-FEATURE_COLUMNS = [
-    "aqi",
-    "hour", "day", "month", "day_of_week",
-    "pm2_5", "pm10", "co", "no2", "so2", "o3",
-    "temp", "humidity", "pressure", "wind_speed", "aqi_change_rate",
-]
+# Needs to comfortably cover the longest rolling window (72h) plus buffer,
+# regardless of current collection frequency.
+HISTORY_HOURS_NEEDED = 96
 
 
-def load_latest_features():
-    """Pull the single most recent row from the feature group."""
+def load_recent_features():
+    """
+    Pull enough recent rows to compute rolling features correctly, then
+    return the single most recent row with those features attached.
+    """
     project = connect()
     fs = project.get_feature_store()
-    fg = fs.get_feature_group(name="aqi_features", version=FEATURE_GROUP_VERSION)
+    fg = fs.get_feature_group(name=FEATURE_GROUP_NAME, version=FEATURE_GROUP_VERSION)
     df = fg.read()
+    df["timestamp"] = pd.to_datetime(df["timestamp"])
     df = df.sort_values("timestamp").reset_index(drop=True)
-    return df.iloc[[-1]]  # most recent row, kept as a 1-row DataFrame
+
+    cutoff = df["timestamp"].max() - pd.Timedelta(hours=HISTORY_HOURS_NEEDED)
+    recent = df[df["timestamp"] >= cutoff].reset_index(drop=True)
+
+    recent = add_engineered_features(recent)
+    return recent.iloc[[-1]]  # most recent row, with rolling features computed from its history
 
 
 def download_latest_model():
@@ -43,11 +47,8 @@ def download_latest_model():
 
     We deliberately pick the HIGHEST version number, not the "best" by
     RMSE across all history — older model versions were trained with a
-    different, smaller feature set (before DAYS_BACK was increased and
-    before 'aqi' was added as a feature), so their RMSE isn't comparable
-    to newer versions. Picking by RMSE alone previously grabbed an old
-    model that didn't expect the current feature columns, causing a
-    ValueError at prediction time.
+    different, smaller feature set, so their RMSE isn't comparable to
+    newer versions.
     """
     project = connect()
     mr = project.get_model_registry()
@@ -64,8 +65,8 @@ def download_latest_model():
 
 
 def run():
-    print("Loading latest features from Hopsworks...")
-    latest_row = load_latest_features()
+    print("Loading recent features from Hopsworks...")
+    latest_row = load_recent_features()
     current_aqi = latest_row["aqi"].values[0]
     current_timestamp = latest_row["timestamp"].values[0]
 
