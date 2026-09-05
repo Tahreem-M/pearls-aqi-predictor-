@@ -4,25 +4,6 @@ A 100% serverless, end-to-end machine learning system that forecasts the Air Qua
 
 **🔗 Live dashboard: [eixzyufmehiobse65uavs6.streamlit.app](https://eixzyufmehiobse65uavs6.streamlit.app/)**
 
----
-
-## Table of Contents
-
-1. [Project Overview](#1-project-overview)
-2. [Architecture](#2-architecture)
-3. [Technology Stack](#3-technology-stack)
-4. [Data Sources and Design Decisions](#4-data-sources-and-design-decisions)
-5. [Model Training and Evaluation](#5-model-training-and-evaluation)
-6. [Model Explainability (SHAP)](#6-model-explainability-shap)
-7. [Automation](#7-automation)
-8. [Dashboard](#8-dashboard)
-9. [Challenges and Solutions](#9-challenges-and-solutions)
-10. [Future Improvements](#10-future-improvements)
-11. [Running It Locally](#11-running-it-locally)
-12. [Project Structure](#12-project-structure)
-
----
-
 ## 1. Project Overview
 
 Pearls AQI Predictor is a serverless machine learning system that forecasts AQI for Karachi three days in advance. It follows the **Feature/Training/Inference (FTI)** pipeline architecture: independent, automated pipelines communicate through a shared Feature Store and Model Registry rather than one monolithic script.
@@ -30,7 +11,6 @@ Pearls AQI Predictor is a serverless machine learning system that forecasts AQI 
 The completed system includes automated hourly data collection, a historical backfill of real Karachi air-quality data, two trained forecasting models benchmarked against a naive baseline, a live inference pipeline, SHAP-based model explainability, and an interactive, publicly deployed Streamlit dashboard — all running unattended.
 
 ## 2. Architecture
-
 ```
 Raw weather + pollution APIs
         │
